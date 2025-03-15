@@ -5,7 +5,7 @@ namespace HelloWorld
 {
     public class HelloWorldManager : MonoBehaviour
     {
-        private NetworkManager m_NetworkManager;
+        private static NetworkManager m_NetworkManager;
 
         void Awake()
         {
@@ -14,7 +14,7 @@ namespace HelloWorld
 
         void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(10, 10, 300, 300));
+            GUILayout.BeginArea(new Rect(100, 70, 300, 300));
             if (!m_NetworkManager.IsClient && !m_NetworkManager.IsServer)
             {
                 StartButtons();
@@ -22,58 +22,44 @@ namespace HelloWorld
             else
             {
                 StatusLabels();
+
                 SubmitNewPosition();
             }
+
             GUILayout.EndArea();
         }
 
-        void StartButtons() 
+        static void StartButtons()
         {
             if (GUILayout.Button("Host")) m_NetworkManager.StartHost();
             if (GUILayout.Button("Client")) m_NetworkManager.StartClient();
             if (GUILayout.Button("Server")) m_NetworkManager.StartServer();
         }
 
-        void StatusLabels() 
+        static void StatusLabels()
         {
-            var mode = m_NetworkManager.IsHost ? "Host" : 
-                m_NetworkManager.IsServer ? "Server" : "Client";
+            var mode = m_NetworkManager.IsHost ?
+                "Host" : m_NetworkManager.IsServer ? "Server" : "Client";
 
             GUILayout.Label("Transport: " +
                 m_NetworkManager.NetworkConfig.NetworkTransport.GetType().Name);
             GUILayout.Label("Mode: " + mode);
         }
 
-        void SubmitNewPosition() 
+        static void SubmitNewPosition()
         {
             if (GUILayout.Button(m_NetworkManager.IsServer ? "Move" : "Request Position Change"))
             {
-                if (m_NetworkManager.IsServer && !m_NetworkManager.IsClient)
+                if (m_NetworkManager.IsServer && !m_NetworkManager.IsClient )
                 {
                     foreach (ulong uid in m_NetworkManager.ConnectedClientsIds)
-                    {
-                        var playerObject = m_NetworkManager.SpawnManager.GetPlayerNetworkObject(uid);
-                        if (playerObject != null)
-                        {
-                            var player = playerObject.GetComponent<HelloWorldPlayer>();
-                            if (player != null)
-                            {
-                                player.Move();
-                            }
-                        }
-                    }
+                        m_NetworkManager.SpawnManager.GetPlayerNetworkObject(uid).GetComponent<HelloWorldPlayer>().Move();
                 }
                 else
                 {
                     var playerObject = m_NetworkManager.SpawnManager.GetLocalPlayerObject();
-                    if (playerObject != null)
-                    {
-                        var player = playerObject.GetComponent<HelloWorldPlayer>();
-                        if (player != null)
-                        {
-                            player.Move();
-                        }
-                    }
+                    var player = playerObject.GetComponent<HelloWorldPlayer>();
+                    player.Move();
                 }
             }
         }
